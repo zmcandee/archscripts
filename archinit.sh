@@ -13,12 +13,16 @@ locale-gen
 # Setting timezone to London
 ln -s /usr/share/zoneinfo/America/New_York /etc/localtime   # Already set to UTC
 
-# Upgrading system
+# Upgrade pacman
 sed -e 's!#(Color)!\1!' /etc/pacman.conf 
 pacman -Sy --noconfirm reflector sudo vim 
 cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bkup && reflector --verbose -l 10 -p http --sort rate --save /etc/pacman.d/mirrorlist
 pacman -Rs --noconfirm reflector
-pacman -Syu --noconfirm 
+
+# Upgrade system
+pacman -Syu --noconfirm --ignore filesystem,bash
+pacman -S --noconfirm bash
+pacman -Su --noconfirm 
 
 #Add user
 useradd -m -g users -u $USERID $USERNAME
