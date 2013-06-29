@@ -21,7 +21,7 @@ pacman -Rs --noconfirm reflector
 pacman -Syu --noconfirm 
 
 #Add user
-useradd -m -g users -u 785 $USERNAME
+useradd -m -g users -u $USERID $USERNAME
 echo "$USERNAME ALL=(ALL) ALL" >> /etc/sudoers
 
 #secure ssh
@@ -35,49 +35,3 @@ printf "\n *** $USERNAME Password *** \n"
 passwd $USERNAME
 
 
-# Configuring user: deployer
-useradd -m -g users -G wheel -s /bin/bash deployer
-passwd deployer <<EOF
-$USERPASS
-$USERPASS
-EOF
-chown -R deployer:users /home/deployer
-su - deployer -c &quot;ssh-keygen -t rsa -f ~/.ssh/id_rsa -N $USERPASS&quot;
-su - deployer -c 'curl &quot;https://raw.github.com/asayers/provision/master/bashrc&quot; > ~/.bashrc'
-
-# Setting up git
-su - deployer -c &quot;git config --global user.name '$GITNAME'&quot;
-su - deployer -c &quot;git config --global user.email '$GITEMAIL'&quot;
-
-# Setting up ruby
-su deployer
-cd ~
-curl https://raw.github.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash
-rbenv install 1.9.3-p194
-rbenv global 1.9.3-p194
-rbenv bootstrap
-rbenv rehash
-exit
-
-# Setting up nginx
-mkdir /etc/nginx/sites-available
-mkdir /etc/nginx/sites-enabled
-curl &quot;https://raw.github.com/asayers/provision/master/nginx.conf&quot; > /etc/nginx/nginx.conf
-curl &quot;https://raw.github.com/asayers/provision/master/nginx_default.conf&quot; > /etc/nginx/sites-available/default
-systemctl enable nginx
-systemctl start nginx
-
-# Setting up postgres
-chown -R postgres /var/lib/postgres/
-su - postgres -c &quot;initdb --locale en_US.UTF-8 -D '/var/lib/postgres/data'&quot;
-su - postgres -c &quot;createuser -d deployer&quot;
-mkdir /run/postgresql
-chown postgres /run/postgresql/
-systemctl enable postgresql
-systemctl start postgresql
-
-# Setting up redis
-systemctl enable redis
-systemctl start redis
-
-# Maybe add a password for the deployer postgres user? Use -P <<EOF etc.
